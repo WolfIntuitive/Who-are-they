@@ -1,212 +1,179 @@
-import React, { useState } from "react";
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Call-Out Tarot Generator</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- React & ReactDOM -->
+    <script crossorigin src="https://unpkg.com/react@18/umd/react.development.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+    <!-- Babel so we can use JSX directly in the browser -->
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+  </head>
+  <body class="min-h-screen bg-neutral-50">
+    <div id="root"></div>
 
-// =============================
-// Call‑Out Tarot: 78‑Card Deck
-// (Minimal UI: Draw 3, Reset, Suit Colors)
-// =============================
+    <script type="text/babel">
+      const { useState } = React;
 
-// Major Arcana (22) — call‑out archetypes
-const MAJOR_ARCANA = [
-  { title: "The Vanisher", desc: "Disappears when you need them most, then shows up like nothing ever happened. Their absence speaks louder than their return." },
-  { title: "The Gaslight Special", desc: "Rewrites history, denies your memory, and convinces you to doubt your own truth." },
-  { title: "The False Ally", desc: "Claims to be on your side until it costs them something. Then you’re on your own." },
-  { title: "The Martyr Complex", desc: "Wounds you, then demands applause for surviving their own cruelty." },
-  { title: "The Silent Judge", desc: "Never confronts you directly, but leaks contempt in whispers and side‑eyes." },
-  { title: "The Spotlight Thief", desc: "Steals your story, your labor, or your pain — and sells it louder." },
-  { title: "The Emotional Accountant", desc: "Keeps score of kindnesses, then charges you compound interest." },
-  { title: "The Puppet Master", desc: "Thrives on stirring conflict, then shrugs and says, ‘Don’t blame me.’" },
-  { title: "The Transactionalist", desc: "Friendship is a business contract; love is a trade deal." },
-  { title: "The Whisper Networker", desc: "Praises you in public, poisons you in private." },
-  { title: "The Chameleon", desc: "Changes colors to fit the crowd, betrays anyone when convenient." },
-  { title: "The Victim Monarch", desc: "Hurts others, then demands the crown of Most Wounded." },
-  { title: "The Conversation Hijacker", desc: "Your story is only the stage for their performance." },
-  { title: "The Drama Distributor", desc: "Spreads chaos like flyers; thrives when others are unsteady." },
-  { title: "The Withholder", desc: "Affection is currency, and they’ll let you starve before they spend it." },
-  { title: "The One‑Upper", desc: "Your joy is nothing but their cue to flex harder." },
-  { title: "The Soul Sucker", desc: "Feeds on your energy until you’re hollow, then calls you weak." },
-  { title: "The Rule Bender", desc: "Rules are for everyone else — they’re the exception every time." },
-  { title: "The Spin Artist", desc: "Distorts reality until you can’t trust your own reflection." },
-  { title: "The Storm Cloud", desc: "Darkens every room and calls it ‘just how I am.’" },
-  { title: "The Gatekeeper", desc: "Holds power, denies access, and laughs when you knock." },
-  { title: "The Mirror Breaker", desc: "Projects every flaw outward, never daring to face their own." }
-];
+      // --- Major Arcana (22) ---
+      const MAJOR_ARCANA = [
+        { title: "The Vanisher", desc: "Disappears when you need them most, then shows up like nothing ever happened." },
+        { title: "The Gaslight Special", desc: "Rewrites history, denies your memory, and convinces you to doubt your own truth." },
+        { title: "The False Ally", desc: "Claims to be on your side until it costs them something. Then you’re on your own." },
+        { title: "The Martyr Complex", desc: "Wounds you, then demands applause for surviving their own cruelty." },
+        { title: "The Silent Judge", desc: "Never confronts you directly, but leaks contempt in whispers and side-eyes." },
+        { title: "The Spotlight Thief", desc: "Steals your story, your labor, or your pain — and sells it louder." },
+        { title: "The Emotional Accountant", desc: "Keeps score of kindnesses, then charges you compound interest." },
+        { title: "The Puppet Master", desc: "Thrives on stirring conflict, then shrugs and says, ‘Don’t blame me.’" },
+        { title: "The Transactionalist", desc: "Friendship is a business contract; love is a trade deal." },
+        { title: "The Whisper Networker", desc: "Praises you in public, poisons you in private." },
+        { title: "The Chameleon", desc: "Changes colors to fit the crowd, betrays anyone when convenient." },
+        { title: "The Victim Monarch", desc: "Hurts others, then demands the crown of Most Wounded." },
+        { title: "The Conversation Hijacker", desc: "Your story is only the stage for their performance." },
+        { title: "The Drama Distributor", desc: "Spreads chaos like flyers; thrives when others are unsteady." },
+        { title: "The Withholder", desc: "Affection is currency, and they’ll let you starve before they spend it." },
+        { title: "The One-Upper", desc: "Your joy is nothing but their cue to flex harder." },
+        { title: "The Soul Sucker", desc: "Feeds on your energy until you’re hollow, then calls you weak." },
+        { title: "The Rule Bender", desc: "Rules are for everyone else — they’re the exception every time." },
+        { title: "The Spin Artist", desc: "Distorts reality until you can’t trust your own reflection." },
+        { title: "The Storm Cloud", desc: "Darkens every room and calls it ‘just how I am.’" },
+        { title: "The Gatekeeper", desc: "Holds power, denies access, and laughs when you knock." },
+        { title: "The Mirror Breaker", desc: "Projects every flaw outward, never daring to face their own." }
+      ];
 
-// Helper to build Minor cards
-const ranks = [
-  "Ace", "Two", "Three", "Four", "Five", "Six", "Seven", "Eight", "Nine", "Ten",
-  "The Gossip", "The Schemer", "The Two‑Face", "The Tyrant"
-];
+      // --- Minor Arcana (suits) ---
+      const ranks = [
+        "Ace","Two","Three","Four","Five","Six","Seven","Eight","Nine","Ten",
+        "The Gossip","The Schemer","The Two-Face","The Tyrant"
+      ];
 
-const suitDefs = {
-  Manipulation: {
-    color: "bg-red-600 text-black",
-    texts: [
-      "One sharp lie that cuts deeper than a blade.",
-      "Words twisted to mean whatever suits them in the moment.",
-      "Betrayal framed as ‘just telling the truth.’",
-      "Silence as punishment, withdrawal as control.",
-      "Wins arguments, loses respect — and doesn’t care.",
-      "Leads you astray while pretending to guide you.",
-      "Half‑truths stolen and spun into whole fictions.",
-      "Tangled in their web, you doubt there’s a way out.",
-      "Tormented by their insinuations, sleepless with doubt.",
-      "Ten knives in your back, all from ‘friends.’",
-      // Courts
-      "Spreads whispers for sport.",
-      "Always plotting the next move against you.",
-      "Polite smile in daylight, venom at night.",
-      "Demands you accept their version of reality."
-    ]
-  },
-  Cruelty: {
-    color: "bg-blue-600 text-black",
-    texts: [
-      "One cruel word, lodged like glass forever.",
-      "Affection offered only with strings attached.",
-      "Bonds built on tearing someone else down.",
-      "Cold shoulders used like weapons.",
-      "Walking away when loyalty is most needed.",
-      "Cashing in old kindnesses like debts.",
-      "Promises made with no intent to keep them.",
-      "Abandoning you the second things get hard.",
-      "Taking satisfaction in your pain.",
-      "Destroying trust, then acting shocked it’s gone.",
-      // Courts
-      "Hurts by ignoring.",
-      "Turns your flaws into their favorite song.",
-      "Demands devotion, offers emptiness.",
-      "Finds joy only when others bleed."
-    ]
-  },
-  Selfishness: {
-    color: "bg-green-900 text-black", // Greenwich
-    texts: [
-      "The spark of greed sets everything alight.",
-      "Choosing self every time loyalty is tested.",
-      "Standing on your work to elevate themselves.",
-      "Celebrating wins they didn’t earn.",
-      "Turns cooperation into rivalry for fun.",
-      "Your victories are theirs by association.",
-      "Defends stolen ground with arrogance.",
-      "Excuses shot rapid‑fire when cornered.",
-      "So defensive they fight shadows.",
-      "Ambition crushing everyone in its path.",
-      // Courts
-      "Takes endlessly, gives nothing.",
-      "Preys on you when you’re weakest.",
-      "Every spotlight belongs to them.",
-      "Treats relationships like property."
-    ]
-  },
-  Chaos: {
-    color: "bg-orange-500 text-black",
-    texts: [
-      "One unnecessary spark that starts a fire.",
-      "Juggles lives, drops them both.",
-      "Pulls others into their drama to share the mess.",
-      "Clings to grudges like treasure.",
-      "Destroys stability just to feel alive.",
-      "Gifts laced with hidden strings.",
-      "Seeds drama, sits back to watch it bloom.",
-      "Ruins routine with reckless choices.",
-      "Feels at home only in dysfunction.",
-      "Leaves devastation and calls it growth.",
-      // Courts
-      "‘Just kidding’ while cutting you deep.",
-      "Pokes until the fight starts.",
-      "Preaches calm, sows storms.",
-      "Wrecks everything, smiles at the ashes."
-    ]
-  }
-};
+      const suitDefs = {
+        Manipulation: { color: "bg-red-600 text-black", texts: [
+          "One sharp lie that cuts deeper than a blade.",
+          "Words twisted to mean whatever suits them in the moment.",
+          "Betrayal framed as ‘just telling the truth.’",
+          "Silence as punishment, withdrawal as control.",
+          "Wins arguments, loses respect — and doesn’t care.",
+          "Leads you astray while pretending to guide you.",
+          "Half-truths stolen and spun into whole fictions.",
+          "Tangled in their web, you doubt there’s a way out.",
+          "Tormented by their insinuations, sleepless with doubt.",
+          "Ten knives in your back, all from ‘friends.’",
+          "Spreads whispers for sport.",
+          "Always plotting the next move against you.",
+          "Polite smile in daylight, venom at night.",
+          "Demands you accept their version of reality."
+        ]},
+        Cruelty: { color: "bg-blue-600 text-black", texts: [
+          "One cruel word, lodged like glass forever.",
+          "Affection offered only with strings attached.",
+          "Bonds built on tearing someone else down.",
+          "Cold shoulders used like weapons.",
+          "Walking away when loyalty is most needed.",
+          "Cashing in old kindnesses like debts.",
+          "Promises made with no intent to keep them.",
+          "Abandoning you the second things get hard.",
+          "Taking satisfaction in your pain.",
+          "Destroying trust, then acting shocked it’s gone.",
+          "Hurts by ignoring.",
+          "Turns your flaws into their favorite song.",
+          "Demands devotion, offers emptiness.",
+          "Finds joy only when others bleed."
+        ]},
+        Selfishness: { color: "bg-green-900 text-black", texts: [
+          "The spark of greed sets everything alight.",
+          "Choosing self every time loyalty is tested.",
+          "Standing on your work to elevate themselves.",
+          "Celebrating wins they didn’t earn.",
+          "Turns cooperation into rivalry for fun.",
+          "Your victories are theirs by association.",
+          "Defends stolen ground with arrogance.",
+          "Excuses shot rapid-fire when cornered.",
+          "So defensive they fight shadows.",
+          "Ambition crushing everyone in its path.",
+          "Takes endlessly, gives nothing.",
+          "Preys on you when you’re weakest.",
+          "Every spotlight belongs to them.",
+          "Treats relationships like property."
+        ]},
+        Chaos: { color: "bg-orange-500 text-black", texts: [
+          "One unnecessary spark that starts a fire.",
+          "Juggles lives, drops them both.",
+          "Pulls others into their drama to share the mess.",
+          "Clings to grudges like treasure.",
+          "Destroys stability just to feel alive.",
+          "Gifts laced with hidden strings.",
+          "Seeds drama, sits back to watch it bloom.",
+          "Ruins routine with reckless choices.",
+          "Feels at home only in dysfunction.",
+          "Leaves devastation and calls it growth.",
+          "‘Just kidding’ while cutting you deep.",
+          "Pokes until the fight starts.",
+          "Preaches calm, sows storms.",
+          "Wrecks everything, smiles at the ashes."
+        ]}
+      };
 
-function buildMinorArcana() {
-  const all = [];
-  Object.entries(suitDefs).forEach(([suit, def]) => {
-    def.texts.forEach((desc, i) => {
-      const rank = ranks[i];
-      all.push({
-        title: `${rank} of ${suit}`,
-        desc,
-        color: def.color
-      });
-    });
-  });
-  return all; // 56 cards
-}
+      function buildMinorArcana() {
+        const all = [];
+        Object.entries(suitDefs).forEach(([suit, def]) => {
+          def.texts.forEach((desc, i) => {
+            all.push({ title: `${ranks[i]} of ${suit}`, desc, color: def.color });
+          });
+        });
+        return all;
+      }
 
-const MINOR_ARCANA = buildMinorArcana();
+      const MINOR_ARCANA = buildMinorArcana();
 
-// Build full deck with metadata
-const FULL_DECK = [
-  ...MAJOR_ARCANA.map((c, idx) => ({
-    id: `M${idx + 1}`,
-    title: c.title,
-    desc: c.desc,
-    color: "bg-black text-yellow-400" // Major Arcana: black with gold text
-  })),
-  ...MINOR_ARCANA.map((c, idx) => ({
-    id: `m${idx + 1}`,
-    title: c.title,
-    desc: c.desc,
-    color: c.color
-  }))
-];
+      const FULL_DECK = [
+        ...MAJOR_ARCANA.map((c, idx) => ({ id:`M${idx+1}`, title:c.title, desc:c.desc, color:"bg-black text-yellow-400" })),
+        ...MINOR_ARCANA.map((c, idx) => ({ id:`m${idx+1}`, title:c.title, desc:c.desc, color:c.color }))
+      ];
 
-// Utility: shuffle copy
-function shuffle(arr) {
-  const a = arr.slice();
-  for (let i = a.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1));
-    [a[i], a[j]] = [a[j], a[i]];
-  }
-  return a;
-}
+      function shuffle(arr){
+        const a = arr.slice();
+        for (let i=a.length-1;i>0;i--){
+          const j=Math.floor(Math.random()*(i+1));
+          [a[i],a[j]]=[a[j],a[i]];
+        }
+        return a;
+      }
 
-export default function CallOutTarotGenerator() {
-  const [pile, setPile] = useState(shuffle(FULL_DECK));
-  const [current, setCurrent] = useState([]);
+      function App(){
+        const [pile,setPile]=useState(shuffle(FULL_DECK));
+        const [current,setCurrent]=useState([]);
 
-  const draw = () => {
-    if (pile.length < 3) return; // not enough cards
-    const cards = pile.slice(0, 3);
-    setCurrent(cards);
-    setPile(pile.slice(3));
-  };
+        const draw=()=>{
+          if(pile.length<3)return;
+          const cards=pile.slice(0,3);
+          setCurrent(cards);
+          setPile(pile.slice(3));
+        }
+        const reset=()=>{setPile(shuffle(FULL_DECK));setCurrent([])}
 
-  const reset = () => {
-    setPile(shuffle(FULL_DECK));
-    setCurrent([]);
-  };
-
-  return (
-    <div className="min-h-screen w-full bg-neutral-50 text-neutral-900 flex flex-col items-center justify-center p-6">
-      {/* Cards */}
-      <div className="w-full max-w-5xl grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-        {current.length > 0 ? (
-          current.map((c) => (
-            <div
-              key={c.id}
-              className={`rounded-2xl shadow p-6 text-center ${c.color}`}
-            >
-              <h1 className="text-xl font-bold mb-2">{c.title}</h1>
-              <p className="text-sm">{c.desc}</p>
+        return (
+          <div className="min-h-screen w-full flex flex-col items-center justify-center p-6">
+            <div className="w-full max-w-5xl grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+              {current.length>0 ? current.map(c=>(
+                <div key={c.id} className={`rounded-2xl shadow p-6 text-center ${c.color}`}>
+                  <h1 className="text-xl font-bold mb-2">{c.title}</h1>
+                  <p className="text-sm">{c.desc}</p>
+                </div>
+              )) : <div className="col-span-3 text-neutral-500 text-center">Click Draw to reveal three cards.</div>}
             </div>
-          ))
-        ) : (
-          <div className="col-span-3 text-neutral-500 text-center">Click Draw to reveal three cards.</div>
-        )}
-      </div>
+            <div className="flex gap-3">
+              <button onClick={draw} className="px-5 py-3 rounded-xl bg-neutral-900 text-white">Draw 3</button>
+              <button onClick={reset} className="px-5 py-3 rounded-xl bg-white border border-neutral-300">Reset</button>
+            </div>
+          </div>
+        )
+      }
 
-      {/* Controls */}
-      <div className="flex gap-3">
-        <button onClick={draw} className="px-5 py-3 rounded-xl bg-neutral-900 text-white shadow hover:shadow-md active:translate-y-[1px]">
-          Draw 3
-        </button>
-        <button onClick={reset} className="px-5 py-3 rounded-xl bg-white border border-neutral-300 hover:border-neutral-500">
-          Reset
-        </button>
-      </div>
-    </div>
-  );
-}
+      ReactDOM.createRoot(document.getElementById("root")).render(<App/>);
+    </script>
+  </body>
+</html>
